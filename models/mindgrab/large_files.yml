@@ -1,0 +1,5 @@
+large_files:
+  - path: "models/model.pt"
+    url: "https://raw.githubusercontent.com/neuroneural/brainchop-models/49d6de76befd804c6e5a10affbef79349cd8c7f4/meshnet/mindgrab/model.pth"
+    hash_val: "31f1bda17b8d3eee17a54cf3f199899763a6615a049f05ab2a05f18eb98ec23a"
+    hash_type: "sha256"
