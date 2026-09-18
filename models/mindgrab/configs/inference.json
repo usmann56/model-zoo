@@ -89,9 +89,10 @@
         "val_handlers": "@handlers",
         "amp": false
     },
+    "checkpoint_sha256": "31f1bda17b8d3eee17a54cf3f199899763a6615a049f05ab2a05f18eb98ec23a",
     "initialize": [
         "$monai.utils.set_determinism(seed=123)",
-        "$checkpoint.load_meshnet_checkpoint(@network, @bundle_root + '/models/model.pt') if @load_pretrain else None"
+        "$checkpoint.load_meshnet_checkpoint(@network, @bundle_root + '/models/model.pt', @checkpoint_sha256) if @load_pretrain else None"
     ],
     "run": [
         "$@evaluator.run()"

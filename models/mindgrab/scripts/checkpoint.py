@@ -30,6 +30,7 @@ changing.
 
 from __future__ import annotations
 
+import hashlib
 import re
 
 import torch
@@ -75,8 +76,29 @@ def convert_meshnet_checkpoint(state_dict: dict[str, torch.Tensor]) -> dict[str,
     return converted
 
 
-def load_meshnet_checkpoint(network: torch.nn.Module, path: str) -> torch.nn.Module:
-    """Load a brainchop-models checkpoint file into `network` in place."""
+def _sha256sum(path: str) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def load_meshnet_checkpoint(network: torch.nn.Module, path: str, expected_sha256: str | None = None) -> torch.nn.Module:
+    """Load a brainchop-models checkpoint file into `network` in place.
+
+    `large_files.yml`'s `hash_val` is only checked once, at download time
+    (see ci/utils.py's download_large_files); it says nothing about the file
+    still on disk by the time a later `monai.bundle run` actually loads it.
+    Passing `expected_sha256` (the same value large_files.yml pins) re-checks
+    the file's digest here too, so a checkpoint that was replaced or
+    corrupted after that initial download is rejected before its weights
+    ever reach the network, rather than silently loaded.
+    """
+    if expected_sha256 is not None:
+        actual_sha256 = _sha256sum(path)
+        if actual_sha256 != expected_sha256:
+            raise ValueError(f"checkpoint at '{path}' has sha256 {actual_sha256}, expected {expected_sha256}")
     raw = torch.load(path, map_location="cpu", weights_only=True)
     network.load_state_dict(convert_meshnet_checkpoint(raw), strict=True)
     return network
